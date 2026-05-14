@@ -79,7 +79,7 @@
             </div>
 
             <div class="glass rounded-2xl p-5 relative overflow-hidden border-l-2 border-l-cyan-500">
-                <div class="flex items-center gap-3 mb-4 text-cyan-500"><span>📐</span><h3 class="font-bold text-sm uppercase text-white">Screen Resolution</h3></div>
+                <div class="flex items-center gap-3 mb-4 text-cyan-500"><span>📱</span><h3 class="font-bold text-sm uppercase text-white">Screen Resolution</h3></div>
                 <select id="wm-val" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-xs font-cyber text-cyan-400 outline-none appearance-none cursor-pointer uppercase tracking-widest">
                     <option value="reset">Default (Reset)</option>
                     <option value="1080x2400">1080 x 2400 (FHD+)</option>
@@ -112,7 +112,7 @@
                     <span id="display-devname" class="text-[10px] text-cyan-400 font-bold uppercase tracking-tighter">Detecting...</span>
                 </div>
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                    <span class="text-[10px] text-slate-500 uppercase">License Status</span>
+                    <span class="text-[10px] text-slate-500 uppercase">Status</span>
                     <span id="status-tag" class="text-[10px] bg-green-500/20 text-green-500 px-2 py-1 rounded-md font-bold uppercase">Active</span>
                 </div>
                 <div class="flex justify-between items-center">
@@ -144,7 +144,7 @@
         function getDeviceID() {
             let id = localStorage.getItem('X_SENSI_HWID');
             if (!id) {
-                id = 'YZ-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
+                id = 'YANZ-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
                 localStorage.setItem('X_SENSI_HWID', id);
             }
             return id;
@@ -179,13 +179,13 @@
                         const expDate = new Date(data.expired);
                         
                         if (today > expDate) {
-                            showError("LICENSE EXPIRED (" + data.expired + ")");
+                            showError("KEY EXPIRED (" + data.expired + ")");
                             return;
                         }
 
                         // CEK HWID
                         if (data.hwid && data.hwid !== myID) {
-                            showError("DEVICE ID MISMATCH!");
+                            showError("KEY TERDAFTAR DI DEVICE LAIN");
                             return;
                         }
                         if (!data.hwid) {
