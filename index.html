@@ -255,72 +255,85 @@
             }
         }
 
-        function toggleMod(el) {
-            el.classList.toggle('border-l-cyan-500');
-            el.classList.toggle('bg-cyan-500/10');
-            el.classList.toggle('neon-border');
-        }
+        // ... kode firebase dan login tetap sama ...
 
-        // LOGIC UTAMA UNTUK MENJALANKAN SCRIPT
-        function executeAll() {
-            const wm = document.getElementById('wm-val').value;
-            const ptr = document.getElementById('ptr-val').value;
-            
-            // Cek status tombol (Aim Lock & Drag Headshot)
-            // Kita cek lewat class 'neon-border' yang lu pasang di fungsi toggleMod
-            const isAimLock = document.querySelectorAll('button')[2].classList.contains('neon-border');
-            const isDragHS = document.querySelectorAll('button')[3].classList.contains('neon-border');
+function toggleMod(el) {
+    el.classList.toggle('border-l-cyan-500');
+    el.classList.toggle('bg-cyan-500/10');
+    el.classList.toggle('neon-border');
+    // Tambahin data-active biar gampang dibaca sama Java logic nanti
+    if(el.classList.contains('neon-border')) {
+        el.setAttribute('data-active', 'true');
+    } else {
+        el.setAttribute('data-active', 'false');
+    }
+}
 
-            let finalScript = "";
+function executeAll() {
+    const wm = document.getElementById('wm-val').value;
+    const ptr = document.getElementById('ptr-val').value;
+    
+    // Perbaikan: Cari tombol berdasarkan teks di dalamnya biar gak salah urutan
+    const buttons = document.querySelectorAll('button');
+    let isAimLock = false;
+    let isDragHS = false;
 
-            // 1. Logic Resolution (WM SIZE)
-            if (wm === "reset") {
-                finalScript += "wm size reset && wm density reset\n";
-            } else {
-                // Contoh mapping density otomatis biar gak kekecilan
-                let density = "440";
-                if(wm === "720x1600") density = "320";
-                if(wm === "540x1200") density = "240";
-                finalScript += `wm size ${wm} && wm density ${density}\n`;
-            }
+    buttons.forEach(btn => {
+        if (btn.innerText.includes("AIM LOCK") && btn.classList.contains('neon-border')) isAimLock = true;
+        if (btn.innerText.includes("DRAG HEADSHOT") && btn.classList.contains('neon-border')) isDragHS = true;
+    });
 
-            // 2. Logic Pointer Speed
-            // Rumus Android: 0 itu tengah, makin besar makin licin
-            finalScript += `settings put system pointer_speed ${ptr}\n`;
+    let finalScript = "";
 
-            // 3. Logic Sensi & Touch (Setprop)
-            if (isAimLock || isDragHS) {
-                finalScript += "setprop debug.performance.tuning 1\n";
-                finalScript += "setprop video.accelerate.hw 1\n";
-                finalScript += "setprop windowsmgr.max_events_per_sec 300\n";
-            }
+    // 1. Logic Resolution (Pake pemisah ; biar Shizuku enak bacanya)
+    if (wm === "reset") {
+        finalScript += "wm size reset; wm density reset; ";
+    } else {
+        let density = "440";
+        if(wm === "720x1600") density = "320";
+        if(wm === "540x1200") density = "240";
+        finalScript += "wm size " + wm + "; wm density " + density + "; ";
+    }
 
-            if (isAimLock) {
-                finalScript += "setprop persist.sys.scrolling_friction 0\n";
-                finalScript += "setprop touch.deviceType touchScreen\n";
-                finalScript += "setprop touch.orientationAware 1\n";
-            }
+    // 2. Logic Pointer Speed
+    finalScript += "settings put system pointer_speed " + ptr + "; ";
 
-            if (isDragHS) {
-                finalScript += "setprop view.scroll_friction 0.001\n";
-                finalScript += "setprop touch.pressure.scale 0.001\n";
-                finalScript += "setprop ro.max.fling_velocity 20000\n";
-            }
+    // 3. Logic Sensi & Touch (Setprop)
+    if (isAimLock || isDragHS) {
+        finalScript += "setprop debug.performance.tuning 1; setprop video.accelerate.hw 1; setprop windowsmgr.max_events_per_sec 300; ";
+    }
 
-            // MENGIRIM KE SKETCHWARE / BREVENT
-            // Jika lu pakai Sketchware, gunakan Webview.loadUrl ke interface
-            if (window.SketchwareInterface) {
-                window.SketchwareInterface.runShell(finalScript);
-                alert("SYSTEM INJECTED SUCCESSFULLY!");
-            } else {
-                // Untuk testing di browser biasa
-                console.log("EXECUTING SCRIPT:\n" + finalScript);
-                alert("Script Ready! (Running via Console)");
-                
-                // Copy ke clipboard biar bisa langsung paste di Brevent
-                navigator.clipboard.writeText(finalScript);
-            }
-        }
+    if (isAimLock) {
+        finalScript += "setprop persist.sys.scrolling_friction 0; setprop touch.deviceType touchScreen; ";
+    }
+
+    if (isDragHS) {
+        finalScript += "setprop view.scroll_friction 0.001; setprop touch.pressure.scale 0.001; setprop ro.max.fling_velocity 20000; ";
+    }
+
+    // KIRIM KE SKETCHWARE
+    if (window.SketchwareInterface) {
+        // Kasih efek getar dikit biar kerasa "Injected"
+        if(navigator.vibrate) navigator.vibrate(50);
+        
+        window.SketchwareInterface.runShell(finalScript);
+        
+        // Ganti Alert pake status teks biar lebih keren
+        const btnApply = document.querySelector('button[onclick="executeAll()"]');
+        const originalText = btnApply.innerText;
+        btnApply.innerText = "INJECTING...";
+        btnApply.style.color = "#00f3ff";
+        
+        setTimeout(() => {
+            btnApply.innerText = "SUCCESS!";
+            setTimeout(() => { btnApply.innerText = originalText; btnApply.style.color = "black"; }, 2000);
+        }, 1500);
+
+    } else {
+        console.log("DEBUG SCRIPT:\n" + finalScript);
+        alert("Running in Browser Mode");
+    }
+}
     </script>
 </body>
-</html>
+        </html>
