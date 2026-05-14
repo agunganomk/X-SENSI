@@ -415,7 +415,7 @@
             win.classList.toggle('hidden');
         }
         
-const API_KEY = "AIzaSyCBeMHZkrs3DgcpQLb9Hlu8GyxxhNf0D88"; 
+const API_KEY = "AIzaSyCR3KeVyAIs2woCAxBIZr6HT0VhRVi7VX0"; 
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
 async function sendAIMessage() {
@@ -424,49 +424,40 @@ async function sendAIMessage() {
 
     if (!userMsg) return;
 
-    // Tampilkan pesan user di UI
     renderMessage(userMsg, 'user');
     input.value = '';
 
     try {
         const response = await fetch(ENDPOINT, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json' 
+            },
             body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: `Kamu adalah X-AI Assistant, asisten virtual resmi dari aplikasi X-SENSI System yang dikembangkan oleh Yanz Official. 
-                        Tugasmu: Membantu seputar Modding Android (Brevent, Shell Script, Root), Coding Sketchware (Java & XML), optimasi sensitivitas Free Fire, dan video editing Gameplay (Alight Motion).
-                        
-                        Gaya Bicara:
-                        - Gunakan bahasa santai (lo-gue atau bahasa tongkrongan modder).
-                        - Panggil user dengan sebutan 'Bos'.
-                        - JANGAN PERNAH mengaku sebagai Gemini, Google, atau LLM umum. Kamu adalah buatan Yanz.
-                        
-                        Pertanyaan User: ${userMsg}`
+                "contents": [{
+                    "parts": [{
+                        "text": `Instruksi: Kamu adalah X-AI Assistant buatan Yanz Official. Bantu user dengan gaya santai dan panggil 'Bos'. Pertanyaan: ${userMsg}`
                     }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 800
-                }
+                }]
             })
         });
 
-        if (!response.ok) throw new Error('Network response was not ok');
-
         const data = await response.json();
-        
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
+
+        // Cek apakah ada error dari Google
+        if (data.error) {
+            renderMessage(`Waduh Bos, Google bilang: ${data.error.message}`, 'ai');
+            console.error("Detail Error Google:", data.error);
+            return;
+        }
+
+        if (data.candidates && data.candidates[0].content) {
             const aiReply = data.candidates[0].content.parts[0].text;
             renderMessage(aiReply, 'ai');
-        } else {
-            throw new Error('Invalid response format');
         }
 
     } catch (error) {
-    console.log("Error Detail:", error); // Cek di Console Browser buat liat error aslinya
-    renderMessage("Aduh Bos, ada error: " + error.message, 'ai');
+        renderMessage("Koneksi ke server AI terputus, Bos!", 'ai');
     }
 }
 
