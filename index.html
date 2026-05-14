@@ -74,15 +74,23 @@
             </div>
 
             <div class="glass rounded-2xl p-5 relative overflow-hidden border-l-2 border-l-cyan-500">
-                <div class="flex items-center gap-3 mb-4 text-cyan-500"><span>📐</span><h3 class="font-bold text-sm uppercase text-white">Screen Resolution</h3></div>
-                <select id="wm-val" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-cyan-400 outline-none">
-                    <option value="reset">DEFAULT (RESET)</option>
-                    <option value="1080x2400">1080 x 2400 (FHD+)</option>
-                    <option value="720x1600">720 x 1600 (HD+)</option>
-                    <option value="540x1200">540 x 1200 (ULTRA SMOOTH)</option>
-                </select>
-                <p class="text-[9px] text-slate-500 mt-2">*Requires Shizuku Permission</p>
-            </div>
+    <div class="flex items-center gap-3 mb-4 text-cyan-500">
+        <span>📐</span>
+        <h3 class="font-bold text-sm uppercase text-white">Screen Resolution</h3>
+    </div>
+    
+    <!-- Pilihan Resolusi Versi Tombol (Gantiin Select Chrome) -->
+    <div class="grid grid-cols-2 gap-3" id="res-container">
+        <button onclick="selectRes(this, 'reset')" class="res-btn glass border border-slate-700 rounded-xl py-3 px-2 text-[10px] font-bold uppercase tracking-tighter transition-all text-slate-400">Default</button>
+        <button onclick="selectRes(this, '1080x2400')" class="res-btn glass border border-slate-700 rounded-xl py-3 px-2 text-[10px] font-bold uppercase tracking-tighter transition-all text-slate-400">1080p (FHD+)</button>
+        <button onclick="selectRes(this, '720x1600')" class="res-btn glass border border-slate-700 rounded-xl py-3 px-2 text-[10px] font-bold uppercase tracking-tighter transition-all text-slate-400">720p (HD+)</button>
+        <button onclick="selectRes(this, '540x1200')" class="res-btn glass border border-slate-700 rounded-xl py-3 px-2 text-[10px] font-bold uppercase tracking-tighter transition-all text-slate-400">540p (Smooth)</button>
+    </div>
+    
+    <!-- Input Tersembunyi buat nampung nilai (biar executeAll tetep work) -->
+    <input type="hidden" id="wm-val" value="reset">
+    <p class="text-[9px] text-slate-500 mt-3">*Pilih resolusi lalu klik Apply System</p>
+</div>
 
             <div class="glass rounded-2xl p-5 border-l-2 border-l-blue-500">
                 <div class="flex justify-between items-center mb-4">
