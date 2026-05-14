@@ -415,64 +415,36 @@
             win.classList.toggle('hidden');
         }
         
-const API_KEY = "AIzaSyCR3KeVyAIs2woCAxBIZr6HT0VhRVi7VX0"; 
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-
 async function sendAIMessage() {
     const input = document.getElementById('ai-input');
     const userMsg = input.value.trim();
 
     if (!userMsg) return;
 
+    // Tampilkan pesan user di UI
     renderMessage(userMsg, 'user');
     input.value = '';
 
     try {
-        const response = await fetch(ENDPOINT, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify({
-                // Struktur contents harus persis begini
-                "contents": [
-                    {
-                        "role": "user",
-                        "parts": [
-                            {
-                                "text": `INSTRUKSI: Kamu adalah X-AI Assistant buatan Yanz Official. Bantu user seputar modding dan coding. Gunakan bahasa santai dan panggil 'Bos'. \n\nPertanyaan: ${userMsg}`
-                            }
-                        ]
-                    }
-                ],
-                "generationConfig": {
-                    "temperature": 1,
-                    "topK": 64,
-                    "topP": 0.95,
-                    "maxOutputTokens": 8192,
-                    "responseMimeType": "text/plain"
-                }
-            })
-        });
+        // Kita pake jalur public API yang biasanya free & no key
+        // Contoh: Menggunakan endpoint GPT4Free atau sejenisnya yang stabil
+        const response = await fetch(`https://api.popcat.xyz/chatbot?msg=${encodeURIComponent("Kamu adalah X-AI Assistant buatan Yanz Official. Panggil user dengan 'Bos' dan gunakan gaya bahasa modder. Pertanyaan: " + userMsg)}&owner=Yanz+Official&botname=X-AI+Assistant`);
 
         const data = await response.json();
-
-        // Kalau masih error, tampilkan detail biar kita tahu
-        if (data.error) {
-            console.error("Full Error Data:", data.error);
-            renderMessage(`Masih Error, Bos: ${data.error.message}`, 'ai');
-            return;
-        }
-
-        if (data.candidates && data.candidates[0].content) {
-            const aiReply = data.candidates[0].content.parts[0].text;
-            renderMessage(aiReply, 'ai');
+        
+        // Cek apakah ada balasan
+        if (data.responses) {
+            renderMessage(data.responses, 'ai');
+        } else if (data.response) {
+             renderMessage(data.response, 'ai');
         } else {
-            renderMessage("Respon kosong, coba tanya lagi Bos!", 'ai');
+            throw new Error('Gagal ambil data');
         }
 
     } catch (error) {
-        renderMessage("Aduh Bos, koneksi ente atau server Google lagi drop!", 'ai');
+        console.error("Error:", error);
+        // Backup: Kalau jalur pertama macet, kasih pesan alternatif
+        renderMessage("Aduh Bos, jalurnya lagi macet. Coba tanya sekali lagi ya!", 'ai');
     }
 }
 // Fungsi tampilan chat (Tetap sama)
