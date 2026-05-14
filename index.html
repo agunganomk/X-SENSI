@@ -416,8 +416,7 @@
         }
         
 const API_KEY = "AIzaSyCR3KeVyAIs2woCAxBIZr6HT0VhRVi7VX0"; 
-// Pakai URL yang ini, lebih stabil dan support model Flash
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
 async function sendAIMessage() {
     const input = document.getElementById('ai-input');
@@ -431,21 +430,37 @@ async function sendAIMessage() {
     try {
         const response = await fetch(ENDPOINT, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json' 
+            },
             body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: `INSTRUKSI: Kamu adalah X-AI Assistant, AI resmi X-SENSI buatan Yanz Official. Bantu user modding & coding dengan gaya santai. Panggil user 'Bos'. Pertanyaan: ${userMsg}`
-                    }]
-                }]
+                // Struktur contents harus persis begini
+                "contents": [
+                    {
+                        "role": "user",
+                        "parts": [
+                            {
+                                "text": `INSTRUKSI: Kamu adalah X-AI Assistant buatan Yanz Official. Bantu user seputar modding dan coding. Gunakan bahasa santai dan panggil 'Bos'. \n\nPertanyaan: ${userMsg}`
+                            }
+                        ]
+                    }
+                ],
+                "generationConfig": {
+                    "temperature": 1,
+                    "topK": 64,
+                    "topP": 0.95,
+                    "maxOutputTokens": 8192,
+                    "responseMimeType": "text/plain"
+                }
             })
         });
 
         const data = await response.json();
 
-        // Cek jika API Key atau limit bermasalah
+        // Kalau masih error, tampilkan detail biar kita tahu
         if (data.error) {
-            renderMessage(`Waduh Bos, ada kendala teknis: ${data.error.message}`, 'ai');
+            console.error("Full Error Data:", data.error);
+            renderMessage(`Masih Error, Bos: ${data.error.message}`, 'ai');
             return;
         }
 
@@ -453,14 +468,13 @@ async function sendAIMessage() {
             const aiReply = data.candidates[0].content.parts[0].text;
             renderMessage(aiReply, 'ai');
         } else {
-            renderMessage("Respon kosong, Bos. Coba tanya lagi!", 'ai');
+            renderMessage("Respon kosong, coba tanya lagi Bos!", 'ai');
         }
 
     } catch (error) {
-        renderMessage("Jalur koneksi terputus, Bos!", 'ai');
+        renderMessage("Aduh Bos, koneksi ente atau server Google lagi drop!", 'ai');
     }
 }
-
 // Fungsi tampilan chat (Tetap sama)
 function renderMessage(text, sender) {
     const container = document.getElementById('ai-messages');
