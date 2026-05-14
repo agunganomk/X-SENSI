@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YANZ OTAK MODDING | X-PROJECT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --cyan: #00f3ff; --dark: #020617; }
+        body { background-color: var(--dark); color: #f8fafc; font-family: 'Rajdhani', sans-serif; overflow-x: hidden; }
+        .font-cyber { font-family: 'Orbitron', sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(0, 243, 255, 0.2); }
+        .neon-border { border: 1px solid var(--cyan); box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }
+        .bg-grid { background-image: linear-gradient(to right, rgba(0, 243, 255, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 243, 255, 0.05) 1px, transparent 1px); background-size: 30px 30px; }
+        .shimmer { background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.2), transparent); background-size: 200% 100%; animation: shimmer 2s infinite; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .scan-line { width: 100%; height: 2px; background: var(--cyan); position: absolute; top: 0; left: 0; box-shadow: 0 0 15px var(--cyan); animation: scan 2s linear infinite; display: none; z-index: 20; }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        .tab-active { color: var(--cyan); border-bottom: 2px solid var(--cyan); }
+        .hidden { display: none; }
+        .marquee-parent { overflow: hidden; background: rgba(0, 243, 255, 0.05); border-y: 1px solid rgba(0, 243, 255, 0.1); }
+        .marquee-child { display: inline-block; white-space: nowrap; animation: marquee 15s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    </style>
+</head>
+<body class="bg-grid min-h-screen flex flex-col items-center">
+
+    <div id="login-screen" class="w-full max-w-md flex flex-col items-center justify-center min-h-screen px-8 z-10">
+        <div class="w-24 h-24 mb-6 relative">
+            <div class="absolute inset-0 rounded-full border-2 border-cyan-500 animate-ping opacity-25"></div>
+            <div class="glass w-full h-full rounded-full flex items-center justify-center border-2 border-cyan-500 overflow-hidden">
+                <img id="dynamic-logo" src="https://i.ibb.co.com/ycVSK4FH/7a9641b08521765946e1abcd92d991ad.jpg" class="w-full h-full object-cover">
+            </div>
+        </div>
+        <div class="glass w-full p-8 rounded-3xl text-center relative overflow-hidden">
+            <div id="scan-bar" class="scan-line"></div>
+            <div class="shimmer absolute top-0 left-0 w-full h-1"></div>
+            <h1 class="font-cyber text-2xl font-bold mb-1 tracking-tighter uppercase">X-Sensi <span class="text-cyan-500">System</span></h1>
+            <p class="text-[10px] text-slate-500 tracking-[0.3em] mb-8 uppercase">Device Locked Authentication</p>
+            <div class="space-y-4">
+                <input type="text" id="user-name" placeholder="USERNAME" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-4 px-6 text-center focus:outline-none focus:border-cyan-500 transition-all font-cyber text-xs uppercase tracking-widest">
+                <input type="password" id="user-pw" placeholder="PASSWORD" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-4 px-6 text-center focus:outline-none focus:border-cyan-500 transition-all font-cyber text-xs tracking-widest">
+                <button onclick="handleLogin()" id="btn-login" class="w-full bg-cyan-600 text-black font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(0,243,255,0.3)] font-cyber uppercase text-sm">INITIALIZE</button>
+            </div>
+            <p class="mt-6 text-[10px] text-slate-600 uppercase">Status: <span id="sys-status">Standby</span></p>
+        </div>
+    </div>
+
+    <div id="main-dashboard" class="hidden w-full max-w-md flex flex-col min-h-screen pb-28 relative">
+        <div class="marquee-parent w-full py-1 mt-2">
+            <p id="slide-notif" class="marquee-child text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Loading system announcement...</p>
+        </div>
+
+        <div class="p-6 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img id="mini-logo" src="https://i.ibb.co.com/ycVSK4FH/7a9641b08521765946e1abcd92d991ad.jpg" class="w-10 h-10 rounded-lg border border-cyan-500 object-cover">
+                <div>
+                    <p class="text-[10px] text-cyan-500 font-bold tracking-widest uppercase">Operator</p>
+                    <h2 id="display-user" class="font-cyber text-lg uppercase font-bold">...</h2>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest">Match Status</p>
+                <p id="match-status" class="text-xs font-bold text-slate-600 tracking-tighter uppercase">Waiting...</p>
+            </div>
+        </div>
+
+        <div id="content-home" class="px-6 space-y-6">
+            <div class="glass rounded-2xl p-5 border-l-2 border-l-orange-500">
+                <div class="flex items-center gap-3 mb-4 text-orange-500"><span>🎮</span><h3 class="font-bold text-sm uppercase text-white">Game Version</h3></div>
+                <select id="ff-ver" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-xs font-cyber text-orange-400 outline-none appearance-none cursor-pointer uppercase tracking-widest">
+                    <option value="com.dts.freefireth">Free Fire Original</option>
+                    <option value="com.dts.freefiremax">Free Fire MAX</option>
+                </select>
+            </div>
+
+            <div class="glass rounded-2xl p-5 relative overflow-hidden border-l-2 border-l-cyan-500">
+                <div class="flex items-center gap-3 mb-4 text-cyan-500"><span>📐</span><h3 class="font-bold text-sm uppercase text-white">Screen Resolution</h3></div>
+                <select id="wm-val" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-xs font-cyber text-cyan-400 outline-none appearance-none cursor-pointer uppercase tracking-widest">
+                    <option value="reset">Default (Reset)</option>
+                    <option value="1080x2400">1080 x 2400 (FHD+)</option>
+                    <option value="720x1600">720 x 1600 (HD+)</option>
+                    <option value="540x1200">540 x 1200 (Smooth)</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="toggleMod(this)" class="glass rounded-2xl p-4 flex flex-col items-center gap-2 border-l-4 border-l-slate-700 active:scale-95 transition-all">
+                    <span class="text-2xl">🎯</span><span class="text-[10px] font-bold uppercase tracking-wider text-center">Aim Lock</span>
+                </button>
+                <button onclick="toggleMod(this)" class="glass rounded-2xl p-4 flex flex-col items-center gap-2 border-l-4 border-l-slate-700 active:scale-95 transition-all">
+                    <span class="text-2xl">⚡</span><span class="text-[10px] font-bold uppercase tracking-wider text-center">Stabilizer</span>
+                </button>
+            </div>
+            <button onclick="executeAll()" class="w-full py-4 rounded-xl bg-white text-black font-black font-cyber text-sm tracking-widest shadow-lg shadow-white/5 uppercase">Apply System</button>
+        </div>
+
+        <div id="content-acc" class="hidden px-6 pt-10 text-center">
+            <div class="w-20 h-20 bg-slate-800 rounded-full mx-auto border-2 border-cyan-500 flex items-center justify-center mb-4 overflow-hidden">
+                <img id="acc-img" src="https://i.ibb.co.com/ycVSK4FH/7a9641b08521765946e1abcd92d991ad.jpg" class="w-full h-full object-cover">
+            </div>
+            <h2 id="acc-name" class="font-cyber text-lg uppercase">...</h2>
+            <p class="text-[10px] text-cyan-500 mb-6 tracking-widest uppercase">Premium Modder</p>
+            
+            <div class="glass rounded-2xl p-6 text-left space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <span class="text-[10px] text-slate-500 uppercase">Device Name</span>
+                    <span id="display-devname" class="text-[10px] text-cyan-400 font-bold uppercase tracking-tighter">Detecting...</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <span class="text-[10px] text-slate-500 uppercase">License Status</span>
+                    <span id="status-tag" class="text-[10px] bg-green-500/20 text-green-500 px-2 py-1 rounded-md font-bold uppercase">Active</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] text-slate-500 uppercase">Device ID</span>
+                    <span id="display-hwid" class="text-[9px] text-slate-500 font-mono">...</span>
+                </div>
+            </div>
+            <button onclick="location.reload()" class="mt-10 text-[10px] text-red-500 font-bold uppercase tracking-widest">Terminate Session</button>
+        </div>
+
+        <div class="fixed bottom-6 left-6 right-6 h-20 glass rounded-3xl flex justify-around items-center px-4">
+            <button onclick="switchTab('home')" id="btn-home" class="flex flex-col items-center gap-1 tab-active"><span class="text-xl">🛠️</span><span class="text-[9px] font-bold uppercase">System</span></button>
+            <button onclick="switchTab('acc')" id="btn-acc" class="flex flex-col items-center gap-1 text-slate-500"><span class="text-xl">👤</span><span class="text-[9px] font-bold uppercase">Account</span></button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqIqdlzzXoZoT8N_J9HRmpoJvbH05Da4c",
+            databaseURL: "https://inject-60ad5-default-rtdb.firebaseio.com",
+            projectId: "inject-60ad5",
+            storageBucket: "inject-60ad5.firebasestorage.app",
+            messagingSenderId: "1043671474298",
+            appId: "1:1043671474298:android:2276352c0d88ebd9709bc3"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function getDeviceID() {
+            let id = localStorage.getItem('X_SENSI_HWID');
+            if (!id) {
+                id = 'YZ-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
+                localStorage.setItem('X_SENSI_HWID', id);
+            }
+            return id;
+        }
+
+        function getDeviceName() {
+            const ua = navigator.userAgent;
+            const model = ua.match(/Android.*;\s([^;]+)\sBuild/);
+            return model ? model[1] : "Android Device";
+        }
+
+        function handleLogin() {
+            const user = document.getElementById('user-name').value;
+            const pass = document.getElementById('user-pw').value;
+            const status = document.getElementById('sys-status');
+            const scanBar = document.getElementById('scan-bar');
+            const myID = getDeviceID();
+            const myDeviceName = getDeviceName();
+
+            if(!user || !pass) return alert("Fill all fields!");
+            status.innerText = "CHECKING LICENSE...";
+            status.className = "text-cyan-500 font-bold uppercase text-[9px]";
+            scanBar.style.display = "block";
+
+            db.ref('users/' + user).once('value', (snapshot) => {
+                const data = snapshot.val();
+                setTimeout(() => {
+                    if (data && data.password === pass) {
+                        // CEK EXPIRED (Format di Firebase: YYYY-MM-DD)
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+                        const expDate = new Date(data.expired);
+                        
+                        if (today > expDate) {
+                            showError("LICENSE EXPIRED (" + data.expired + ")");
+                            return;
+                        }
+
+                        // CEK HWID
+                        if (data.hwid && data.hwid !== myID) {
+                            showError("DEVICE ID MISMATCH!");
+                            return;
+                        }
+                        if (!data.hwid) {
+                            db.ref('users/' + user).update({ hwid: myID, device_name: myDeviceName });
+                        }
+                        enterDashboard(user, data, myID, data.device_name || myDeviceName);
+                    } else {
+                        showError("INVALID KEY!");
+                    }
+                }, 1200);
+            });
+        }
+
+        function enterDashboard(username, data, hwid, devName) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-dashboard').classList.remove('hidden');
+            document.getElementById('display-user').innerText = username;
+            document.getElementById('acc-name').innerText = username;
+            document.getElementById('display-hwid').innerText = hwid;
+            document.getElementById('display-devname').innerText = devName;
+            db.ref('system_settings').on('value', (snap) => {
+                const sys = snap.val();
+                if(sys) document.getElementById('slide-notif').innerText = sys.announcement;
+            });
+        }
+
+        function showError(msg) {
+            const status = document.getElementById('sys-status');
+            status.innerText = msg;
+            status.className = "text-red-500 font-bold uppercase text-[9px]";
+            document.getElementById('scan-bar').style.display = "none";
+        }
+
+        function switchTab(target) {
+            const home = document.getElementById('content-home');
+            const acc = document.getElementById('content-acc');
+            const bHome = document.getElementById('btn-home');
+            const bAcc = document.getElementById('btn-acc');
+            if(target === 'home') {
+                home.classList.remove('hidden'); acc.classList.add('hidden');
+                bHome.classList.add('tab-active'); bAcc.classList.remove('tab-active');
+            } else {
+                home.classList.add('hidden'); acc.classList.remove('hidden');
+                bAcc.classList.add('tab-active'); bHome.classList.remove('tab-active');
+            }
+        }
+
+        function toggleMod(el) {
+            el.classList.toggle('neon-border');
+            el.classList.toggle('bg-cyan-500/10');
+            el.classList.toggle('border-l-cyan-500');
+        }
+
+        function executeAll() {
+            const wm = document.getElementById('wm-val').value;
+            const ffVer = document.getElementById('ff-ver').value;
+            let shell = `am force-stop ${ffVer}; `;
+            if (wm === "reset") shell += "wm size reset; wm density reset; ";
+            else { 
+                let d = (wm === "720x1600") ? "320" : (wm === "540x1200") ? "240" : "440";
+                shell += `wm size ${wm}; wm density ${d}; `;
+            }
+            if (window.SketchwareInterface) {
+                window.SketchwareInterface.runShell(shell);
+                alert("SYSTEM APPLIED!");
+            } else {
+                alert("DEBUG:\n" + shell);
+            }
+        }
+    </script>
+</body>
+</html>
