@@ -416,7 +416,8 @@
         }
         
 const API_KEY = "AIzaSyCR3KeVyAIs2woCAxBIZr6HT0VhRVi7VX0"; 
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+// Pakai URL yang ini, lebih stabil dan support model Flash
+const ENDPOINT = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
 async function sendAIMessage() {
     const input = document.getElementById('ai-input');
@@ -430,13 +431,11 @@ async function sendAIMessage() {
     try {
         const response = await fetch(ENDPOINT, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json' 
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                "contents": [{
-                    "parts": [{
-                        "text": `Instruksi: Kamu adalah X-AI Assistant buatan Yanz Official. Bantu user dengan gaya santai dan panggil 'Bos'. Pertanyaan: ${userMsg}`
+                contents: [{
+                    parts: [{
+                        text: `INSTRUKSI: Kamu adalah X-AI Assistant, AI resmi X-SENSI buatan Yanz Official. Bantu user modding & coding dengan gaya santai. Panggil user 'Bos'. Pertanyaan: ${userMsg}`
                     }]
                 }]
             })
@@ -444,20 +443,21 @@ async function sendAIMessage() {
 
         const data = await response.json();
 
-        // Cek apakah ada error dari Google
+        // Cek jika API Key atau limit bermasalah
         if (data.error) {
-            renderMessage(`Waduh Bos, Google bilang: ${data.error.message}`, 'ai');
-            console.error("Detail Error Google:", data.error);
+            renderMessage(`Waduh Bos, ada kendala teknis: ${data.error.message}`, 'ai');
             return;
         }
 
         if (data.candidates && data.candidates[0].content) {
             const aiReply = data.candidates[0].content.parts[0].text;
             renderMessage(aiReply, 'ai');
+        } else {
+            renderMessage("Respon kosong, Bos. Coba tanya lagi!", 'ai');
         }
 
     } catch (error) {
-        renderMessage("Koneksi ke server AI terputus, Bos!", 'ai');
+        renderMessage("Jalur koneksi terputus, Bos!", 'ai');
     }
 }
 
