@@ -425,11 +425,20 @@
             if (isEasy) shell += "settings put system pointer_speed 4; ";
             if (isXit) shell += "settings put system pointer_speed 7; ";
 
+            
             if (window.SketchwareInterface) {
-                window.SketchwareInterface.runShell(shell);
-                alert("SYSTEM APPLIED!");
+                if(navigator.vibrate) navigator.vibrate(50);
+                window.SketchwareInterface.runShell(finalScript);
+                const btnApply = document.querySelector('button[onclick="executeAll()"]');
+                const originalText = btnApply.innerText;
+                btnApply.innerText = "INJECTING...";
+                btnApply.style.color = "#00f3ff";
+                setTimeout(() => {
+                    btnApply.innerText = "SUCCESS!";
+                    setTimeout(() => { btnApply.innerText = originalText; btnApply.style.color = "black"; }, 2000);
+                }, 1500);
             } else {
-                alert("DEBUG MODE:\n" + shell);
+                alert("Running in Browser Mode\nScript:\n" + finalScript);
             }
         }
 
